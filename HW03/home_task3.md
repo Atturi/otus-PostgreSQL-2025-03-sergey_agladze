@@ -17,13 +17,21 @@ sudo systemctl stop postgresql-17
 >Проинициализировать новый диск и добавить его в файловую систему
 
 Разметка диска через fdisk:
+
 sudo fdisk /dev/sdb
+
 n - add new partition
+
 p - primary partition type(mbr)
+
 1 - partition number
+
 first sector: default
+
 last sector: default
+
 w - write table to disk and exit
+
 Создание файловое системы и монтирование согласно инструкции в задании.
 
 >Запустить кластер после перемещения содержимого папки data
