@@ -40,4 +40,14 @@ w - write table to disk and exit
 sudo systemctl edit postgresql-17
 [Service]
 Environment=PGDATA={новый путь до папки data}
+>Задание со звёздочкой
+
+- В **Virtual Box** в разделе **Носители** отсоединить ранее созданный диск;
+- Добавить отсоединённый на прошлом шаге диск в новую виртуальную машину;
+- На новой машине через убедиться в сохранении структуры диска при переносе: 
+ lsblk /dev/sdb1 -f
+- sudo mount /dev/sdb1 /var/lib/pgsql/
+- sudo systemctl start postgersql-17
+
+В итоге СУБД запустилась и правильно прочитал папку data. На новой машине удалось обратиться к перенесённым данным.
 
