@@ -1,0 +1,14 @@
+do $$
+declare
+  i int := 0;
+begin
+  while i < 10
+  loop
+    raise notice 'Итерация: %', i;
+
+    update public.table1
+       set name = 'name'||id||i;
+
+    i := i + 1;
+  end loop;
+end; $$;
