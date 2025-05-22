@@ -1,0 +1,15 @@
+/*
+  Вывести список пользовательских таблиц и их ограничений, учитывая возможность отсутствия ограничений.
+  Для каждой таблицы вывести схему, название таблицы, название ограничения и тип ограничения.
+  Отсортировать по имени схемы, затем по имени таблицы, затем по имени ограничения.
+*/
+select n.nspname,
+       c.relname,
+       con.conname,
+       con.contype
+  from pg_namespace n
+  join pg_class c on c.relnamespace = n.oid
+                  and c.relkind = 'r'
+  left join pg_constraint con on con.conrelid = c.oid
+ where n.nspname not in('pg_catalog', 'information_schema')
+ order by n.nspname, c.relname, con.conname

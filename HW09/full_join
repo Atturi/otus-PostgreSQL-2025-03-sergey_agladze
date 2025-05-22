@@ -1,0 +1,15 @@
+/*
+  Вывети список таблиц и индексов.
+  Включая случаи, когда на таблицу не создано индексов, а также случаи, когда при удалении таблицы индекс не был удалён.
+  Вывести имя схемы, имя таблицы и имя индекса.
+  Отсортировать по имени схемы, затем по имени таблицы.
+*/
+select n.nspname,
+       c.relname as table,
+       idxcls.relname as index
+  from pg_class c
+  full join pg_index idx on c.oid = idx.indrelid
+  left join pg_class idxcls on idx.indexrelid = idxcls.oid
+  left join pg_namespace n on n.oid = c.relnamespace
+ where c.relkind = 'r' or idxcls.relkind = 'i'
+ order by n.nspname, c.relname

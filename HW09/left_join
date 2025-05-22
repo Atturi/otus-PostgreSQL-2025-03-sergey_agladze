@@ -1,0 +1,12 @@
+/*
+  Получить все таблицы для схем "new_schema" и "wow_schema" с учётом возможности отсутствия таблиц в схеме.
+  Вывести имя схемы и имя таблицы.
+  Отсортировать по имени схемы, затем по имени таблицы.
+*/
+select n.nspname,
+       c.relname
+  from pg_namespace n
+  left join pg_class c on c.relnamespace = n.oid
+                       and c.relkind = 'r'
+ where n.nspname in('new_schema', 'wow_schema')
+ order by n.nspname, c.relname

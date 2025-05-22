@@ -1,0 +1,14 @@
+/*
+  Для всех ролей вывести список всех таблиц в пользовательских схемах. Может использоваться при подготовке динамических команд grant и revoke.
+  Вывести имя роли и полное имя таблицы.
+  Отсортировать по имени роли, затем по имени таблицы.
+*/
+select rol.rolname,
+       n.nspname||'.'||c.relname as table
+  from pg_roles rol
+  cross join pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+ where rol.rolcanlogin = true
+   and c.relkind = 'r'
+   and n.nspname not in('pg_catalog', 'information_schema')
+ order by rol.rolname, c.relname

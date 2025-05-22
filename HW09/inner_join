@@ -1,0 +1,11 @@
+/*
+  Для каждой схемы получить все таблицы в этой схеме.
+  Вывести имя схемы и имя таблицы.
+  Отсортировать по имени схемы, затем по имени таблицы.
+*/
+select n.nspname,
+       c.relname
+  from pg_namespace n
+  join pg_class c on c.relnamespace = n.oid
+                  and c.relkind = 'r'
+ order by n.nspname, c.relname
