@@ -1,0 +1,30 @@
+create or replace function f_show_table_attributes
+(
+  _schema text,
+  _table text
+)
+returns table
+(
+  name        text,
+  data_type   text,
+  nullable    boolean,
+  description text
+)
+language sql
+as $$
+  select a.attname,
+         t.typname,
+	 not a.attnotnull,
+	 d.description
+    from pg_namespace n
+    join pg_class c on c.relnamespace = n.oid
+                    and c.relkind in('r', 'p')
+		    and c.relname = _table
+    join pg_attribute a on a.attrelid = c.oid
+                        and a.attnum > 0
+    join pg_type t on t.oid = a.atttypid
+    left join pg_description d on d.objoid = c.oid
+                               and d.objsubid = a.attnum
+   where n.nspname = _schema
+   order by a.attnum
+$$;

@@ -1,0 +1,109 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 17.0 (Debian 17.0-1.pgdg120+1)
+-- Dumped by pg_dump version 17.0 (Debian 17.0-1.pgdg120+1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: boarding_passes; Type: TABLE; Schema: bookings; Owner: postgres
+--
+
+CREATE TABLE bookings.boarding_passes_part (
+    ticket_no character(13) NOT NULL,
+    flight_id integer NOT NULL,
+    scheduled_departure date not null,
+    boarding_no integer NOT NULL,
+    seat_no character varying(4) NOT NULL
+) partition by range(scheduled_departure); --Реализовано секционирование по диапазону
+
+
+ALTER TABLE bookings.boarding_passes_part OWNER TO postgres;
+
+--
+-- Name: TABLE boarding_passes; Type: COMMENT; Schema: bookings; Owner: postgres
+--
+
+COMMENT ON TABLE bookings.boarding_passes_part IS 'Boarding passes';
+
+
+--
+-- Name: COLUMN boarding_passes.ticket_no; Type: COMMENT; Schema: bookings; Owner: postgres
+--
+
+COMMENT ON COLUMN bookings.boarding_passes_part.ticket_no IS 'Ticket number';
+
+
+--
+-- Name: COLUMN boarding_passes.flight_id; Type: COMMENT; Schema: bookings; Owner: postgres
+--
+
+COMMENT ON COLUMN bookings.boarding_passes_part.flight_id IS 'Flight ID';
+
+
+--
+-- Name: COLUMN boarding_passes.boarding_no; Type: COMMENT; Schema: bookings; Owner: postgres
+--
+
+COMMENT ON COLUMN bookings.boarding_passes_part.boarding_no IS 'Boarding pass number';
+
+
+--
+-- Name: COLUMN boarding_passes.seat_no; Type: COMMENT; Schema: bookings; Owner: postgres
+--
+
+COMMENT ON COLUMN bookings.boarding_passes_part.seat_no IS 'Seat number';
+COMMENT ON COLUMN bookings.boarding_passes_part.scheduled_departure is 'scheduled_departure from bookings.flights';
+
+--
+-- Name: boarding_passes boarding_passes_flight_id_boarding_no_key; Type: CONSTRAINT; Schema: bookings; Owner: postgres
+--
+
+ALTER TABLE ONLY bookings.boarding_passes_part
+    ADD CONSTRAINT boarding_passes_flight_id_boarding_no_key UNIQUE (scheduled_departure, flight_id, boarding_no);
+
+
+--
+-- Name: boarding_passes boarding_passes_flight_id_seat_no_key; Type: CONSTRAINT; Schema: bookings; Owner: postgres
+--
+
+ALTER TABLE ONLY bookings.boarding_passes_part
+    ADD CONSTRAINT boarding_passes_flight_id_seat_no_key UNIQUE (scheduled_departure, flight_id, seat_no);
+
+
+--
+-- Name: boarding_passes boarding_passes_pkey; Type: CONSTRAINT; Schema: bookings; Owner: postgres
+--
+
+ALTER TABLE ONLY bookings.boarding_passes_part
+    ADD CONSTRAINT boarding_passes_pkey PRIMARY KEY (scheduled_departure, ticket_no, flight_id);
+
+
+--
+-- Name: boarding_passes boarding_passes_ticket_no_fkey; Type: FK CONSTRAINT; Schema: bookings; Owner: postgres
+--
+/* Ключ будет создан на каждую секцию отдельно
+ALTER TABLE ONLY bookings.boarding_passes_part
+    ADD CONSTRAINT boarding_passes_ticket_no_fkey FOREIGN KEY (ticket_no, flight_id) REFERENCES bookings.ticket_flights(ticket_no, flight_id);
+*/
+
+--
+-- PostgreSQL database dump complete
+--
+

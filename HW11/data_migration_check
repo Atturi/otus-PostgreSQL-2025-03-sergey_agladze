@@ -1,0 +1,25 @@
+--Посчитать количество записей на каждый месяц в старой таблице
+with cte_old_table as(
+  select date_trunc('month', f.scheduled_departure) as date,
+         count(*) as old_records
+    from boarding_passes bp
+    join flights f on f.flight_id = bp.flight_id
+   group by date_trunc('month', f.scheduled_departure)
+)
+
+--Посчитать количество записей на каждый месяц в новой таблице
+, cte_new_table as(
+  select date_trunc('month', bpp.scheduled_departure) as date,
+         count(*) as new_records
+    from boarding_passes_part bpp
+   group by date_trunc('month', bpp.scheduled_departure)
+)
+
+--Сравнить данные по месяцам в старой и новой таблицах
+select cot.date::date,
+       cot.old_records,
+       cnt.new_records,
+       cot.old_records = cnt.new_records as are_equal
+  from cte_old_table cot
+  join cte_new_table cnt on cnt.date = cot.date
+ order by cot.date

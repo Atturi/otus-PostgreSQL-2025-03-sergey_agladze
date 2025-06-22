@@ -1,0 +1,23 @@
+do
+$$
+declare
+  /*
+    Создать внешний ключ на таблицу ticket_flights.
+    Для каждой секции ключ создаётся отдельно.
+  */
+  rec_parts    record; --Цикл по секциям
+  query_string text;   --Строка команды для создания внешнего ключа
+begin
+  for rec_parts in
+    select c.relname
+      from pg_class c
+     where c.relname like 'boarding_passes_%'
+       and c.relkind = 'r'
+  loop
+    query_string = 'alter table '||rec_parts.relname||' 
+      add constraint '||rec_parts.relname||'ticket_no_flight_id foreign key(ticket_no, flight_id)
+      references ticket_flights(ticket_no, flight_id);';
+
+    execute query_string;
+  end loop;
+end $$;

@@ -1,0 +1,7 @@
+select c.relname,
+       pg_size_pretty(pg_relation_size(n.nspname||'.'||c.relname)) as size
+  from pg_namespace n
+  join pg_class c on c.relnamespace = n.oid
+                  and c.relkind = 'r'
+ where n.nspname = 'bookings'
+ order by pg_relation_size(n.nspname||'.'||c.relname)

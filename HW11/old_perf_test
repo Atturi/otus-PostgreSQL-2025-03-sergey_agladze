@@ -1,0 +1,12 @@
+/*
+  Получить данные о посадочных талонах за декабрь 2016.
+*/
+
+explain(analyze, costs off)
+select f.flight_no,
+       f.scheduled_departure,
+       bp.boarding_no,
+       bp.seat_no
+  from flights f
+  join boarding_passes bp on bp.flight_id = f.flight_id
+ where date_trunc('month', f.scheduled_departure)::date = '2016-12-01'

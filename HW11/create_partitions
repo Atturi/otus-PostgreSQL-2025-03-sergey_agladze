@@ -1,0 +1,20 @@
+do
+$$
+declare
+  /*
+    Создать секции для каждого месяца.
+  */
+  rec_parts record;
+  query_string text;
+begin
+  for rec_parts in
+    select distinct date_trunc('month', f.scheduled_departure) as month_departure
+      from bookings.flights f
+     order by month_departure
+  loop
+    query_string = 'create table boarding_passes_'||extract(year from rec_parts.month_departure)||'_'||extract(month from rec_parts.month_departure)||'
+    partition of boarding_passes_part for values from ('||quote_literal(rec_parts.month_departure)||') to ('||quote_literal(rec_parts.month_departure + '1 month'::interval)||');';
+
+    execute query_string;
+  end loop;
+end $$;

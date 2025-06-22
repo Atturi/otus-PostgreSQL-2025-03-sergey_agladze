@@ -1,0 +1,16 @@
+insert
+  into boarding_passes_part
+       (
+         ticket_no,
+	 flight_id,
+	 scheduled_departure,
+	 boarding_no,
+	 seat_no
+       )
+select bp.ticket_no,
+       bp.flight_id,
+       f.scheduled_departure,
+       bp.boarding_no,
+       bp.seat_no
+  from boarding_passes bp
+  join flights f on f.flight_id = bp.flight_id

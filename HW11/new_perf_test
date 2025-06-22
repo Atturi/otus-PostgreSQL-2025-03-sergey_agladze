@@ -1,0 +1,10 @@
+explain(analyze, costs off)
+select f.flight_no,
+       f.scheduled_departure,
+       bpp.boarding_no,
+       bpp.seat_no
+  from flights f
+  join boarding_passes_part bpp on bpp.flight_id = f.flight_id
+                                and bpp.scheduled_departure > '2016-12-01'
+				and bpp.scheduled_departure < '2017-01-01'
+ where date_trunc('month', f.scheduled_departure)::date = '2016-12-01'::date

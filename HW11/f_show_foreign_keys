@@ -1,0 +1,90 @@
+create or replace function f_show_foreign_keys
+(
+  _schema text,
+  _table  text
+)
+returns table
+(
+  key_type   text,
+  src_fields text,
+  schema_name     text,
+  table_name      text,
+  dst_fields text,
+  key_name   text
+)
+language sql
+as $$
+  with cte_relation as(
+    select n.nspname,
+           c.oid
+      from pg_namespace n
+      join pg_class c on c.relnamespace = n.oid
+                      and c.relname = _table
+		      and c.relkind in('r', 'p')
+     where n.nspname = _schema
+   )
+
+   , cte_out_keys as(
+     select 'out' as key_type,
+            n.nspname as schema,
+	    c.relname as table,
+	    con.conname as key_name,
+            array_agg(distinct ai.attname) as src_fields,
+	    array_agg(distinct ao.attname) as dst_fields
+       from cte_relation cr
+       join pg_constraint con on con.conrelid = cr.oid
+                              and con.contype = 'f'
+       join pg_class c on c.oid = con.confrelid
+       join pg_namespace n on n.oid = c.relnamespace
+       join pg_attribute ao on ao.attnum = any(con.confkey)
+                            and ao.attrelid = c.oid
+       join pg_attribute ai on ai.attnum = any(con.conkey)
+                            and ai.attrelid = cr.oid
+      group by n.nspname,
+	       c.relname,
+	       con.conname
+   )
+   
+   , cte_in_keys as(
+     select 'in' as key_type,
+            n.nspname as schema,
+	    c.relname as table,
+	    con.conname as key_name,
+	    array_agg(distinct ai.attname) as src_fields,
+	    array_agg(distinct ao.attname) as dst_fields
+       from cte_relation cr
+       join pg_constraint con on con.confrelid = cr.oid
+                              and con.contype = 'f'
+       join pg_class c on c.oid = con.conrelid
+       join pg_namespace n on n.oid = c.relnamespace
+       join pg_attribute ai on ai.attnum = any(con.conkey)
+                            and ai.attrelid = c.oid
+       join pg_attribute ao on ao.attnum = any(con.confkey)
+                            and ao.attrelid = cr.oid
+      group by n.nspname,
+               c.relname,
+	       con.conname
+   )
+
+   , cte_keys as(
+     select *
+       from cte_in_keys
+     union all
+     select *
+       from cte_out_keys
+   )
+
+   select ck.key_type,
+          ck.src_fields,
+	  ck.schema,
+	  ck.table,
+	  ck.dst_fields,
+	  ck.key_name
+     from cte_keys ck
+    order by case
+               when ck.key_type = 'in' then 1
+	       else 2
+             end
+
+
+$$;
