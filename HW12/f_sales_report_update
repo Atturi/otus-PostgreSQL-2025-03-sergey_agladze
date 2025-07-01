@@ -1,0 +1,147 @@
+create or replace function pract_functions.f_sales_report_update()
+returns trigger
+language plpgsql
+as $$
+declare
+  current_sum    numeric; --Текущая сумма продаж товара в отчёте
+  current_price  numeric; --Текущая цена товара
+  current_name   text;    --Название текущего товара
+  new_good_name  text;    --Название нового товара
+  new_good_price numeric; --Цена нового товара
+begin
+  /*
+    insert
+
+    Если в отчёте уже есть подобный товар, обновить по нему данные.
+    Если в отчёте нет подобного товара, добавить запись.
+  */
+
+  if TG_OP = 'INSERT' then
+    insert
+      into pract_functions.good_sum_mart
+           (
+	     good_name,
+	     sum_sale
+	   )
+    select g.good_name,
+           (g.good_price * new.sales_qty) as total_price
+      from pract_functions.goods g
+     where g.goods_id = new.good_id
+    on conflict (good_name)
+    do update
+          set sum_sale = good_sum_mart.sum_sale + excluded.sum_sale
+        where good_sum_mart.good_name = excluded.good_name;
+
+    return new;
+  elsif TG_OP = 'UPDATE' then
+    /*
+      update
+
+      Если обновляется good_id, пересчитать и старый, и новый товар. 
+        Если старого стало 0, удалить его из отчёта.
+      Если обновляется количество, оно должно быть положительным.
+    */
+    if new.sales_qty < 1 then
+      raise exception 'Количество товара должно быть больше 0';
+    end if;
+
+    if new.good_id != old.good_id then
+      /*
+        Вычесть продажу из старого товара.
+	Если общая стоимость продаж старого товара опустилась до 0, удалить его из отчёта.
+      */
+      select g.good_name,
+             g.good_price,
+	     gsm.sum_sale
+        into current_name,
+	     current_price,
+             current_sum
+        from pract_functions.goods g
+	join pract_functions.good_sum_mart gsm on gsm.good_name = g.good_name
+       where g.goods_id = old.good_id;
+
+      if current_sum = current_price * old.sales_qty then
+        delete
+	  from pract_functions.good_sum_mart
+	 where good_name = current_name;
+      else
+        update pract_functions.good_sum_mart
+	   set sum_sale = sum_sale - current_price * old.sales_qty
+	 where good_name = current_name;
+      end if;
+
+      /*
+        Добавить продажу в новый товар.
+	Продаж по новому товару могло не быть, поэтому сначала нужна попытка вставить запись.
+      */
+      select g.good_name,
+             g.good_price
+	into new_good_name,
+	     new_good_price
+        from pract_functions.goods g
+       where g.goods_id = new.good_id;
+
+      insert
+        into pract_functions.good_sum_mart
+	     (
+	       good_name,
+	       sum_sale
+	     )
+      values (
+               new_good_name,
+	       new_good_price * new.sales_qty
+             )
+      on conflict(good_name)
+      do update
+            set sum_sale = good_sum_mart.sum_sale + excluded.sum_sale
+	  where good_sum_mart.good_name = new_good_name;
+    elsif old.sales_qty != new.sales_qty then
+      select g.good_name,
+             g.good_price
+	into new_good_name,
+	     new_good_price
+        from pract_functions.goods g
+       where g.goods_id = new.good_id;
+
+      update pract_functions.good_sum_mart
+         set sum_sale = case
+	                  when old.sales_qty < new.sales_qty then sum_sale + (new_good_price * (new.sales_qty - old.sales_qty))
+			  else sum_sale - (new_good_price * (old.sales_qty - new.sales_qty))
+			end
+       where good_sum_mart.good_name = new_good_name;
+    end if;
+
+    return new;
+  elsif TG_OP = 'DELETE' then
+    /*
+      delete
+
+      Если при удалении общая сумма продаж достигает 0, товар удаляется из отчёта.
+    */
+
+    select gsm.sum_sale,
+           g.good_price,
+	   g.good_name
+      into current_sum,
+           current_price,
+	   current_name
+      from pract_functions.good_sum_mart gsm
+      join pract_functions.goods g on g.goods_id = old.good_id
+                                   and g.good_name = gsm.good_name;
+
+    if current_sum = current_price * old.sales_qty then
+      delete 
+        from pract_functions.good_sum_mart
+       where good_name = current_name;
+    else
+      update pract_functions.good_sum_mart
+         set sum_sale = sum_sale - current_price * old.sales_qty
+       where good_name = current_name;
+    end if;
+
+    return old;
+  end if;
+
+  return new;
+
+end; $$;

@@ -1,0 +1,2 @@
+alter table pract_functions.good_sum_mart
+  add constraint good_name_uk unique(good_name);

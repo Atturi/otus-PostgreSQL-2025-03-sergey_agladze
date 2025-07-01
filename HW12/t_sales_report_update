@@ -1,0 +1,3 @@
+create trigger t_sales_report_update
+before insert or update or delete on pract_functions.sales
+  for each row execute function pract_functions.f_sales_report_update();
