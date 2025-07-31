@@ -1,0 +1,111 @@
+create schema if not exists tmp_schema;
+
+create table if not exists tmp_schema.ticket_flights
+(
+  flight_id int4 not null,
+  ticket_no bpchar not null,
+  amount numeric not null,
+  fare_conditions varchar not null
+);
+
+insert
+  into tmp_schema.ticket_flights
+select flight_id,
+       ticket_no,
+       amount,
+       fare_conditions
+  from bookings.ticket_flights;
+
+create table if not exists tmp_schema.bookings
+(
+  book_date timestamp not null,
+  total_amount numeric(10, 2) not null,
+  book_ref char(6) not null
+);
+
+insert
+  into tmp_schema.bookings
+select book_date,
+       total_amount,
+       book_ref
+  from bookings.bookings;
+
+create table if not exists tmp_schema.boarding_passes
+(
+  ticket_no char(13) not null,
+  flight_id integer not null,
+  boarding_no smallint not null,
+  seat_no varchar(4) not null
+);
+
+insert
+  into tmp_schema.boarding_passes
+select ticket_no,
+       flight_id,
+       boarding_no,
+       seat_no
+  from bookings.boarding_passes;
+
+create table if not exists tmp_schema.flights
+(
+  scheduled_departure timestamp not null,
+  scheduled_arrival timestamp not null,
+  actual_departure timestamp,
+  actual_arrival timestamp,
+  flight_id integer not null,
+  flight_no char(6) not null,
+  departure_airport char(3) not null,
+  arrival_airport char(3) not null,
+  aircraft_code char(3) not null,
+  status varchar(20) not null
+);
+
+insert
+  into tmp_schema.flights
+select scheduled_departure,
+       scheduled_arrival,
+       actual_departure,
+       actual_arrival,
+       flight_id,
+       flight_no,
+       departure_airport,
+       arrival_airport,
+       aircraft_code,
+       status
+  from bookings.flights;
+
+create table if not exists tmp_schema.airports_data
+(
+  coordinates point not null,
+  airport_code char(3) not null,
+  airport_name text not null,
+  city text not null,
+  timezone text not null
+);
+
+insert
+  into tmp_schema.airports_data
+select coordinates,
+       airport_code,
+       airport_name,
+       city,
+       timezone
+  from bookings.airports_data;
+
+create table if not exists tmp_schema.aircrafts_data
+(
+  range integer not null,
+  model text not null,
+  aircraft_code char(3) not null
+);
+
+insert
+  into tmp_schema.aircrafts_data
+select range,
+       model,
+       aircraft_code
+  from bookings.aircrafts_data;
+
+
+
+
