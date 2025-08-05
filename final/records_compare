@@ -1,0 +1,23 @@
+with cte_tuples as(
+  select n.nspname,
+         c.reltuples
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+   where c.relname = 'aircrafts_data'
+     and n.nspname = 'bookings'
+)
+
+, cte_bookings_records as(
+  select row_number() over() as tuple_number, lp_len as bookings
+    from heap_page_items(get_raw_page('bookings.aircrafts_data', 0)) src
+)
+
+, cte_tmp_schema_records as(
+  select row_number() over() as tuple_number, lp_len as src_schema
+    from heap_page_items(get_raw_page('tmp_schema.aircrafts_data', 0)) dst 
+)
+
+select cbr.tuple_number, cbr.bookings, ctsr.src_schema
+  from cte_bookings_records cbr
+  join cte_tmp_schema_records ctsr on ctsr.tuple_number = cbr.tuple_number
+ order by cbr.tuple_number
