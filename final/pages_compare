@@ -1,0 +1,33 @@
+with cte_pages as(
+  select n.nspname,
+         c.relpages
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+   where c.relname = 'airports_data'
+     and n.nspname = 'bookings'
+)
+
+, cte_page_numbers as(
+  select number
+    from cte_pages cp
+    join generate_series(0, cp.relpages - 1) number on true
+)
+
+, cte_bookings_records as(
+  select cpn.number as page_number, count(*) as bookings
+    from cte_page_numbers cpn
+    join heap_page_items(get_raw_page('bookings.airports_data', cpn.number)) src on true
+   group by cpn.number
+)
+
+, cte_tmp_schema_records as(
+  select cpn.number as page_number, count(*) as src_schema
+    from cte_page_numbers cpn
+    join heap_page_items(get_raw_page('tmp_schema.airports_data', cpn.number)) dst on true
+   group by cpn.number
+)
+
+select cbr.page_number, cbr.bookings, ctsr.src_schema
+  from cte_bookings_records cbr
+  join cte_tmp_schema_records ctsr on ctsr.page_number = cbr.page_number
+ order by cbr.page_number
