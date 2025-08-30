@@ -1,0 +1,36 @@
+create or replace function service.f_pg_stat_statements_stat()
+returns void
+language plpgsql
+as $$
+begin
+  insert
+    into service.pg_stat_statements_stat
+         (
+	   stat_date,
+	   query,
+	   total_plan_time,
+	   mean_plan_time,
+	   total_exec_time,
+	   mean_exec_time,
+	   shared_blks_hit,
+	   shared_blks_read,
+	   local_blks_hit,
+	   local_blks_read,
+	   temp_blks_read
+	 )
+  select now(),
+         query,
+         total_plan_time,
+	 mean_plan_time,
+	 total_exec_time,
+	 mean_exec_time,
+	 shared_blks_hit,
+	 shared_blks_read,
+	 local_blks_hit,
+	 local_blks_read,
+	 temp_blks_read
+    from pg_stat_statements
+   order by total_exec_time desc
+   limit 10;
+end;
+$$;

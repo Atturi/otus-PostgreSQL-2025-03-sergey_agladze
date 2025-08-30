@@ -1,0 +1,4 @@
+select cron.schedule('0 23 * * sunday * * * * *',
+  $CRON$ select service.f_pg_stat_statements_stat(); $CRON$
+  );
+

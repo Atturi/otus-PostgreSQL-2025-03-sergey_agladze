@@ -1,0 +1,14 @@
+create table service.pg_stat_statements_stat
+(
+  stat_date        date,
+  query            text,
+  total_plan_time  bigint,
+  mean_plan_time   bigint,
+  total_exec_time  bigint,
+  mean_exec_time   bigint,
+  shared_blks_hit  bigint,
+  shared_blks_read bigint,
+  local_blks_hit   bigint,
+  local_blks_read  bigint,
+  temp_blks_read   bigint
+);
