@@ -1,0 +1,8 @@
+create table if not exists service.pg_buffercache_stat
+(
+  stat_time timestamp   not null,
+  schemaname text       not null,
+  tablename text        not null,
+  relblocknumber bigint not null,
+  usagecount smallint   not null
+);

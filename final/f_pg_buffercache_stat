@@ -1,0 +1,26 @@
+create or replace function service.f_pg_buffercache_stat()
+returns void
+language plpgsql
+as $$
+declare
+begin
+  insert
+    into service.pg_buffercache_stat
+         (
+	   stat_time,
+	   schemaname,
+	   tablename,
+	   relblocknumber,
+	   usagecount
+	 )
+  select now(),
+         n.nspname,
+	 c.relname,
+	 b.relblocknumber,
+	 b.usagecount
+    from pg_buffercache b
+    join pg_class c on pg_relation_filenode(c.oid) = b.relfilenode
+                    and c.relkind in('r', 'm')
+    join pg_namespace n on n.oid = c.relnamespace
+   where b.reldatabase = (select oid from pg_database where datname = current_database());
+end; $$;
