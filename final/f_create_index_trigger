@@ -1,0 +1,17 @@
+create or replace function service.f_create_index_trigger()
+returns event_trigger
+language plpgsql
+as $$
+declare
+  rec_index record;
+begin
+
+  for rec_index in 
+    select pi.indrelid
+      from pg_event_trigger_ddl_commands() petdc
+      join pg_index pi on pi.indexrelid = petdc.objid
+
+  loop
+    perform pg_stat_reset_single_table_counters(rec_index.indrelid);
+  end loop;
+end; $$;

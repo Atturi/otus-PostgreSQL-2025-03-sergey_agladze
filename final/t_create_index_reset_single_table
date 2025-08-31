@@ -1,0 +1,3 @@
+create event trigger t_create_index_reset_single_table
+on ddl_command_end when tag in ('CREATE INDEX')
+execute function service.f_create_index_trigger();
