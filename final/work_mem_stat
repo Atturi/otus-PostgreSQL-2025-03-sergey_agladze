@@ -1,0 +1,5 @@
+create table service.work_mem_stat
+(
+  stat_date timestamp not null,
+  memory_value bigint not null
+);
