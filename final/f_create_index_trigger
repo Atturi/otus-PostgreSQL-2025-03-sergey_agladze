@@ -3,15 +3,19 @@ returns event_trigger
 language plpgsql
 as $$
 declare
+  rec_table record;
   rec_index record;
 begin
-
-  for rec_index in 
+  for rec_table in 
     select pi.indrelid
       from pg_event_trigger_ddl_commands() petdc
       join pg_index pi on pi.indexrelid = petdc.objid
 
   loop
-    perform pg_stat_reset_single_table_counters(rec_index.indrelid);
+   perform pg_stat_reset_single_table_counters(psui.indexrelid)
+      from pg_stat_user_indexes psui
+     where psui.relid = rec_table.indrelid;
+
+    perform pg_stat_reset_single_table_counters(rec_table.indrelid);
   end loop;
 end; $$;
